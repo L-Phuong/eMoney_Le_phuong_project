@@ -81,11 +81,14 @@ try:
 
     cursor.execute('SELECT * FROM Hieu_suat_nganh')
     rows = cursor.fetchall()
-    for row in rows:
-        print(row)
+    if row:
+        print("Success")
 
     cursor.close()
     conn.close()
+except Exception as e:
+    print("Error\n")
+    print(e)
 
 finally:
     driver.quit()
