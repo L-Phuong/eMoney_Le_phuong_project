@@ -1,42 +1,31 @@
 import mysql.connector
 import pandas as pd
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
-db_connection = mysql.connector.connect(
-    host="127.0.0.1",
+connection = mysql.connector.connect(
+    host="localhost",
     user="root",
     password="271204",
-    database="newschema"
+    database="emoney_project"
 )
 
-cursor = db_connection.cursor()
-cursor.execute("select * from mytable")
-myresult = cursor.fetchall()
+query = "SELECT thoi_gian, thang_1, thang_2, thang_3, thang_4, thang_5, thang_6, thang_7, thang_8, thang_9, thang_10, thang_11, thang_12 FROM hieu_suat_nganh"
+data = pd.read_sql(query, connection)
+connection.close()
 
-plt.figure(figsize=(10, 6))
-plt.rcParams['figure.dpi'] = 75
-query = """
-SELECT 
-    `VIN (1-10)`, County, City, State, `Postal Code`, 
-    `Model Year`, Make, Model, `Electric Vehicle Type`, 
-    `Clean Alternative Fuel Vehicle (CAFV) Eligibility`, 
-    `Electric Range`, `Base MSRP`, `Legislative District`, 
-    `DOL Vehicle ID`, `Vehicle Location`, `Electric Utility`, 
-    `2020 Census Tract` 
-FROM mytable
-"""
-data = pd.read_sql(query, db_connection)
+for col in data.columns[1:]:
+    data[col] = data[col].str.strip('%').astype(float)
 
-data['City'] = data['City'].fillna('Unknown').astype(str)
-data['Legislative District'] = data['Legislative District'].fillna('Unknown').astype(str)
-data['City'] = data['City'].astype('category')
-data['Legislative District'] = data['Legislative District'].astype('category')
-plt.bar(x = data['City'], height = data['Legislative District'], width = 0.5, align= 'edge')
+plt.figure(figsize=(15, 8))
 
+for index, row in data.iterrows():
+    plt.plot(data.columns[1:], row[1:], marker='o', label=row['thoi_gian'])
+
+plt.title("Hiệu Suất Ngành Qua Các Tháng (2010-2024)", fontsize=16)
+plt.xlabel("Tháng", fontsize=14)
+plt.ylabel("Hiệu Suất (%)", fontsize=14)
+plt.xticks(rotation=45)
+plt.legend(title="Năm", loc="upper left", fontsize=10)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
 plt.show()
-
-db_connection.commit()
-cursor.close()
-db_connection.close()
-
-print("CSV file imported successfully!")
