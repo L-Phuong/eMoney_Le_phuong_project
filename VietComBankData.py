@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pymysql
+from datetime import datetime
 
 driver = webdriver.Chrome()
 driver.get("https://finance.vietstock.vn/VCB/thong-ke-giao-dich.htm")
@@ -39,19 +40,62 @@ try:
 
     for record in data:
         try:
+            datetime.strptime(record[0], '%H:%M:%S')  # Ensure the `time` field is valid
             cursor.execute('''
             INSERT INTO StockTransactions (time, price, lot_quantity, cumulative_quantity, percentage)
             VALUES (%s, %s, %s, %s, %s)
             ''', record)
+        except ValueError:
+            print(f"Invalid time format in record: {record}")
         except pymysql.MySQLError as e:
             print(f"Error inserting data: {e}")
 
-    conn.commit()
+    cursor.execute('''
+    CREATE TEMPORARY TABLE TempStockTransactions AS
+    SELECT 
+        NULL AS id, -- Reset the ID column to NULL for auto-increment
+        time, 
+        price, 
+        lot_quantity, 
+        cumulative_quantity, 
+        percentage
+    FROM (
+        SELECT *, ROW_NUMBER() OVER (
+            PARTITION BY time, price, lot_quantity, cumulative_quantity, percentage
+            ORDER BY STR_TO_DATE(time, '%H:%i:%s') ASC
+        ) AS rn
+        FROM StockTransactions
+    ) AS RankedTransactions
+    WHERE rn = 1
+    ORDER BY STR_TO_DATE(time, '%H:%i:%s') ASC;
+    ''')
+
+    cursor.execute('DROP TABLE StockTransactions')
+    cursor.execute('''
+    CREATE TABLE StockTransactions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        time VARCHAR(50),
+        price VARCHAR(50),
+        lot_quantity VARCHAR(50),
+        cumulative_quantity VARCHAR(50),
+        percentage VARCHAR(50)
+    )
+    ''')
+
+    cursor.execute('''
+    INSERT INTO StockTransactions (time, price, lot_quantity, cumulative_quantity, percentage)
+    SELECT time, price, lot_quantity, cumulative_quantity, percentage
+    FROM TempStockTransactions;
+    ''')
 
     cursor.execute('SELECT * FROM StockTransactions')
     rows = cursor.fetchall()
     if rows:
-        print("Data inserted successfully")
+        print("Sorted, deduplicated, and ID reset data:")
+        for row in rows:
+            print(row)
+
+    conn.commit()
     cursor.close()
     conn.close()
 
