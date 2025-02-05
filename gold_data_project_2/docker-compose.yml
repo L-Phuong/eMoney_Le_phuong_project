@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  scraper:
+    build:
+      context: .
+    volumes:
+      - data:/app/data
+    container_name: gold_scraper
+
+  web:
+    build:
+      context: .
+    command: python web_server.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - data:/app/data
+    container_name: gold_web
+
+volumes:
+  data:

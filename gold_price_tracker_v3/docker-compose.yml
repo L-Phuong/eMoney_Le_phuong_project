@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  fetcher:
+    build:
+      context: .
+    container_name: gold-price-fetcher
+    command: ["python", "fetch_gold_data.py"]
+    depends_on:
+      - mysql
+    environment:
+      - API_URL=https://www.goldapi.io/api/XAU/USD
+      - API_KEY=goldapi-2si9psm61oygp2-io
+    networks:
+      - gold_prices_network
+  mysql:
+    image: mysql:5.7
+    platform: linux/amd64
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gold_prices
+    ports:
+      - "3306:3306"
+    volumes:
+      - /Users/lephuong/Desktop/eMoney_project/gold_price_tracker_v3/mysql_data/data:/var/lib/mysql
+    networks:
+      - gold_prices_network
+
+  flask:
+    build:
+      context: .
+    container_name: flask-container
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mysql
+    environment:
+      FLASK_ENV: development
+    networks:
+      - gold_prices_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  gold_prices_network:
+    driver: bridge

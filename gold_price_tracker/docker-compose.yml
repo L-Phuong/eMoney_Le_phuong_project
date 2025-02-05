@@ -1,0 +1,23 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    networks:
+      - gold_price_network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    networks:
+      - gold_price_network
+
+networks:
+  gold_price_network:
+    driver: bridge

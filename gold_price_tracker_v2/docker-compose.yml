@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gold_prices
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - gold_prices_network
+
+  flask:
+    build:
+      context: .
+    container_name: flask-container
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    environment:
+      FLASK_ENV: development
+    networks:
+      - gold_prices_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  gold_prices_network:
+    driver: bridge

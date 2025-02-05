@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Price Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        table { width: 100%; border-collapse: collapse; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .pagination { margin-top: 20px; }
+        .pagination a { margin: 0 5px; text-decoration: none; color: black; }
+        .pagination a.active { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Gold Price Tracker</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Metal</th>
+                <th>Currency</th>
+                <th>Price</th>
+                <th>Open Price</th>
+                <th>Low Price</th>
+                <th>High Price</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="gold-prices-table">
+            {% for row in data %}
+                <tr>
+                    <td>{{ row['metal'] }}</td>
+                    <td>{{ row['currency'] }}</td>
+                    <td>{{ row['price'] }}</td>
+                    <td>{{ row['open_price'] }}</td>
+                    <td>{{ row['low_price'] }}</td>
+                    <td>{{ row['high_price'] }}</td>
+                    <td>{{ row['timestamp'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('index', page=1) }}">1</a>
+            <a href="{{ url_for('index', page=page-1) }}">Prev</a>
+        {% endif %}
+
+        {% for p in range(1, total_pages+1) %}
+            <a href="{{ url_for('index', page=p) }}" class="{{ 'active' if p == page else '' }}">{{ p }}</a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('index', page=page+1) }}">Next</a>
+            <a href="{{ url_for('index', page=total_pages) }}">{{ total_pages }}</a>
+        {% endif %}
+    </div>
+
+    <script>
+        // Hàm để cập nhật bảng dữ liệu mỗi 2 giây
+        function updateGoldPrice() {
+            fetch('/get_new_gold_price')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('gold-prices-table');
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${data.metal}</td>
+                        <td>${data.currency}</td>
+                        <td>${data.price}</td>
+                        <td>${data.open_price}</td>
+                        <td>${data.low_price}</td>
+                        <td>${data.high_price}</td>
+                        <td>${data.timestamp}</td>
+                    `;
+                    tableBody.insertBefore(row, tableBody.firstChild); // Chèn dòng mới lên đầu bảng
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Cập nhật mỗi 2 giây
+        setInterval(updateGoldPrice, 2000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: gold-price-app
+    ports:
+      - "5000:5000" # Chuyển tiếp cổng
+    environment:
+      FLASK_APP: app.py # Tên tệp Flask
+      FLASK_ENV: development # Chế độ phát triển (hoặc production)
+      DB_HOST: host.docker.internal # Để Flask kết nối với MySQL trên máy chủ cục bộ
+      DB_PORT: 3306 # Cổng MySQL mặc định
+      DB_USER: root # Tài khoản MySQL
+      DB_PASSWORD: 271204 # Mật khẩu MySQL
+      DB_NAME: gold_price_db # Tên cơ sở dữ liệu
+    restart: always

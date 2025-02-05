@@ -1,0 +1,13 @@
+# # Bỏ qua các tệp/thư mục không cần thiết
+# *.pyc
+# __pycache__/
+# *.log
+# *.tmp
+# *.env
+# *.sqlite3
+# node_modules/
+# *.tar
+# *.zip
+# .DS_Store
+# .vscode/
+# .idea/
